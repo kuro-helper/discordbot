@@ -7,7 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"kurohelper/internal/commands"
+	"kurohelper/internal/commands/other"
 	"kurohelper/internal/commands/random"
 	"kurohelper/internal/commands/search"
 	"kurohelper/internal/commands/user"
@@ -60,8 +60,8 @@ var commandMap = map[string]SlashCommand{
 	// vndb專用指令
 	"vndb統計資料": &vndb.VNDBStats{},
 	// 未分類指令
-	"幫助": &commands.Helper{},
-	"公告": &commands.Announcement{},
+	"幫助": &other.Helper{},
+	"公告": &other.Announcement{},
 }
 
 // 註冊命令

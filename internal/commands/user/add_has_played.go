@@ -19,6 +19,7 @@ import (
 	"kurohelperservice/provider/erogs"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	"kurohelper/internal/store"
@@ -223,7 +224,7 @@ func (a *AddHasPlayed) HandleComponent(s *discordgo.Session, i *discordgo.Intera
 		}
 		actionsRow := utils.MakeActionsRow(messageComponent)
 
-		image := utils.GenerateImage(i, res.BannerUrl)
+		image := commands.GenerateImage(i, res.BannerUrl)
 
 		embed := &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{

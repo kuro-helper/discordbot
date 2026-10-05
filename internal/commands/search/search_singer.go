@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelperrerrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	"kurohelper/internal/utils"
@@ -225,7 +226,7 @@ func buildSearchSingerDetailComponents(res *erogs.Singer, currentPage int, pageC
 			thumbnailURL = erogs.MakeDMMImageURL(m.DMM)
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{

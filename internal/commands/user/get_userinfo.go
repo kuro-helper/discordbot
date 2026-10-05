@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/utils"
 
@@ -62,9 +62,9 @@ func (g *GetUserinfo) Definition() *discordgo.ApplicationCommand {
 		Description: "取得個人資料",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
-				Type:        discordgo.ApplicationCommandOptionString,
+				Type:        discordgo.ApplicationCommandOptionUser,
 				Name:        "user",
-				Description: "要查詢的使用者 Discord ID（選填）",
+				Description: "要查詢的使用者（選填）",
 				Required:    false,
 			},
 		},
@@ -126,7 +126,7 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 		pageIndex := pageCID.Value
 
 		var hasMore bool
-		userGames, tmpMore := utils.PaginationR(filteredUserGames, pageIndex, true)
+		userGames, tmpMore := commands.PaginationR(filteredUserGames, pageIndex, true)
 		if tmpMore {
 			hasMore = true
 		}
@@ -313,7 +313,7 @@ func getUserGameRecordTime(ug *kurohelperdb.UserGame) string {
 }
 
 func formatUserGameLine(index int, ug *kurohelperdb.UserGame) string {
-	flags := utils.FormatGameFlags(ug.Status, ug.WishListMark)
+	flags := commands.FormatGameFlags(ug.Status, ug.WishListMark)
 	line := fmt.Sprintf("%d. **%s**", index, ug.GameErogs.Name)
 	if flags != "" {
 		line += " **|** " + flags

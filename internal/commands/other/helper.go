@@ -1,4 +1,4 @@
-package commands
+package other
 
 import (
 	"kurohelper/internal/utils"

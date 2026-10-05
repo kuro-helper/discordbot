@@ -1,4 +1,4 @@
-package commands
+package other
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/utils"
 	kurohelperdb "kurohelperservice/db"
@@ -169,7 +170,7 @@ func buildAnnouncementListComponents(list []kurohelperdb.Announcement) ([]discor
 
 		thumbURL := optionalURL(item.Thumbnail)
 		if thumbURL == "" {
-			thumbURL = utils.PlaceholderImageURL
+			thumbURL = commands.PlaceholderImageURL
 		}
 		containerComponents = append(containerComponents, discordgo.Section{
 			Components: []discordgo.MessageComponent{
@@ -220,7 +221,7 @@ func buildAnnouncementDetailComponents(item kurohelperdb.Announcement) ([]discor
 	divider := true
 	thumbURL := optionalURL(item.Thumbnail)
 	if thumbURL == "" {
-		thumbURL = utils.PlaceholderImageURL
+		thumbURL = commands.PlaceholderImageURL
 	}
 
 	containerComponents := []discordgo.MessageComponent{

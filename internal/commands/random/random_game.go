@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/utils"
 
@@ -74,7 +75,7 @@ func ymgalRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		title += "/" + game[0].ChineseName
 	}
 
-	image := utils.GenerateImage(i, "https://store.ymgal.games/"+game[0].MainImg)
+	image := commands.GenerateImage(i, "https://store.ymgal.games/"+game[0].MainImg)
 
 	embed := &discordgo.MessageEmbed{
 		Title: title,
@@ -148,7 +149,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// character block
 
-	characterMap := make(map[string]utils.CharacterData) // map[characterID]CharacterData
+	characterMap := make(map[string]commands.CharacterData) // map[characterID]CharacterData
 	for _, va := range res.Results[0].Va {
 		characterName := va.Character.Original
 		if characterName == "" {
@@ -156,7 +157,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		for _, vn := range va.Character.Vns {
 			if vn.ID == res.Results[0].ID {
-				characterMap[va.Character.ID] = utils.CharacterData{
+				characterMap[va.Character.ID] = commands.CharacterData{
 					Name: characterName,
 					Role: vn.Role,
 				}
@@ -166,7 +167,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// 將 map 轉為 slice 並排序
-	characterList := make([]utils.CharacterData, 0, len(characterMap))
+	characterList := make([]commands.CharacterData, 0, len(characterMap))
 	for _, character := range characterMap {
 		characterList = append(characterList, character)
 	}
@@ -197,7 +198,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// 過濾色情/暴力圖片
-	image := utils.GenerateImage(i, res.Results[0].Image.Url)
+	image := commands.GenerateImage(i, res.Results[0].Image.Url)
 	if res.Results[0].Image.Sexual >= 1 || res.Results[0].Image.Violence >= 1 {
 		image = nil
 		slog.Debug("封面已過濾圖片顯示", "gameTitle", gameTitle)

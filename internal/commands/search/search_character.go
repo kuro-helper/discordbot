@@ -12,6 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelperrerrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	"kurohelper/internal/store"
@@ -174,7 +175,7 @@ func buildSearchCharacterComponents(res []vndb.CharacterSearchResponse, currentP
 
 		thumbnailURL := strings.TrimSpace(r.Image.URL)
 		if thumbnailURL == "" {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{
@@ -372,7 +373,7 @@ func vndbSearchCharacterWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.I
 		}
 	}
 	if thumbnailURL == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 
 	section.Accessory = &discordgo.Thumbnail{
@@ -509,7 +510,7 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 		}
 	}
 	if thumbnailURL == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 	section.Accessory = &discordgo.Thumbnail{
 		Media: discordgo.UnfurledMediaItem{URL: thumbnailURL},

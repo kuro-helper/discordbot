@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelperrerrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	"kurohelper/internal/store"
@@ -125,7 +126,7 @@ func (sg *SearchGame) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 			executor.BackToHome(s, i, cid.ToBackToHomeCIDV2(), cache.VndbGameListStore, buildVndbSearchGameComponents)
 		case switchMode{searchGameErogsRouteKey, utils.BackToHomeBehavior}:
 			executor.BackToHome(s, i, cid.ToBackToHomeCIDV2(), cache.ErogsGameListStore, func(cacheValue []erogs.GameList, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-				statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+				statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 				if err != nil {
 					return nil, err
 				}
@@ -171,7 +172,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		}
 		return erogs.SearchGameListByKeyword([]string{keyword, kurohelperservice.ZhTwToJp(keyword)})
 	}, func(cacheValue []erogs.GameList, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-		statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+		statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +188,7 @@ func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.Interaction
 		return
 	}
 	executor.ChangePage(s, i, pageCID, cache.ErogsGameListStore, func(cacheValue []erogs.GameList, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-		statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+		statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +254,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		if item.GameErogsID != res.ID {
 			continue
 		}
-		userData.WriteString(utils.FormatGameFlags(item.Status, item.WishListMark))
+		userData.WriteString(commands.FormatGameFlags(item.Status, item.WishListMark))
 		break
 	}
 
@@ -466,7 +467,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
 	thumbnailURL := imageURL
 	if strings.TrimSpace(thumbnailURL) == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 
 	section.Accessory = &discordgo.Thumbnail{
@@ -527,7 +528,7 @@ func buildSearchGameComponents(res []erogs.GameList, currentPage int, cacheID st
 		itemNum := start + idx + 1
 		status := statusMap[r.ID]
 		_, inWish := inWishMap[r.ID]
-		statusSuffix := utils.FormatGameFlags(status, inWish)
+		statusSuffix := commands.FormatGameFlags(status, inWish)
 		if statusSuffix != "" {
 			statusSuffix = " **|** " + statusSuffix
 		}
@@ -545,7 +546,7 @@ func buildSearchGameComponents(res []erogs.GameList, currentPage int, cacheID st
 			thumbnailURL = erogs.MakeDMMImageURL(r.DMM)
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{
@@ -712,7 +713,7 @@ func vndbSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Intera
 	}
 
 	// character block
-	characterMap := make(map[string]utils.CharacterData)
+	characterMap := make(map[string]commands.CharacterData)
 	for _, va := range res.Results[0].Va {
 		characterName := va.Character.Original
 		if characterName == "" {
@@ -720,7 +721,7 @@ func vndbSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Intera
 		}
 		for _, vn := range va.Character.Vns {
 			if vn.ID == res.Results[0].ID {
-				characterMap[va.Character.ID] = utils.CharacterData{
+				characterMap[va.Character.ID] = commands.CharacterData{
 					Name: characterName,
 					Role: vn.Role,
 				}
@@ -730,7 +731,7 @@ func vndbSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Intera
 	}
 
 	// 將 map 轉為 slice 並排序
-	characterList := make([]utils.CharacterData, 0, len(characterMap))
+	characterList := make([]commands.CharacterData, 0, len(characterMap))
 	for _, character := range characterMap {
 		characterList = append(characterList, character)
 	}
@@ -841,7 +842,7 @@ func vndbSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Intera
 	}
 
 	if strings.TrimSpace(thumbnailURL) == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 
 	section.Accessory = &discordgo.Thumbnail{
@@ -925,7 +926,7 @@ func buildVndbSearchGameComponents(res []vndb.GetVnIDUseListResponse, currentPag
 		if r.Image != nil && strings.TrimSpace(r.Image.Thumbnail) != "" {
 			thumbnailURL = r.Image.Thumbnail
 		} else {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{

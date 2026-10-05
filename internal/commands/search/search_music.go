@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelperrerrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	"kurohelper/internal/utils"
@@ -169,7 +170,7 @@ func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inte
 	}
 
 	if thumbnailURL == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 
 	// 構建 Components
@@ -291,7 +292,7 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 			}
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{
