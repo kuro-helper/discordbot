@@ -3,6 +3,7 @@ package random
 import (
 	"errors"
 	"fmt"
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/utils"
 	"log/slog"
@@ -138,7 +139,7 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, o
 	}
 
 	res.Description = vndb.ConvertBBCodeToMarkdown(res.Description)
-	image := utils.GenerateImage(i, res.Image.URL)
+	image := commands.GenerateImage(i, res.Image.URL)
 	embed := &discordgo.MessageEmbed{
 		Title:       nameData,
 		Description: res.Description, // 敘述放在Description欄位以避免超過字數限制

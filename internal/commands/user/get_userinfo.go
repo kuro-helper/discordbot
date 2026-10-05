@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelpererrors "kurohelper/internal/errors"
 	"kurohelper/internal/utils"
 
@@ -25,6 +25,24 @@ type UserInfo struct {
 type GetUserinfo struct{}
 
 const userInfoCommandName = "個人資料"
+
+func selectedUserDiscordID(i *discordgo.InteractionCreate) (string, bool) {
+	for _, opt := range i.ApplicationCommandData().Options {
+		if opt.Name != "user" {
+			continue
+		}
+		id, ok := opt.Value.(string)
+		if !ok {
+			return "", false
+		}
+		id = strings.TrimSpace(id)
+		if id == "" {
+			return "", false
+		}
+		return id, true
+	}
+	return "", false
+}
 
 func filterDisplayUserGames(userGames []kurohelperdb.UserGame) []kurohelperdb.UserGame {
 	filtered := make([]kurohelperdb.UserGame, 0, len(userGames))
@@ -44,9 +62,9 @@ func (g *GetUserinfo) Definition() *discordgo.ApplicationCommand {
 		Description: "取得個人資料",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "discord_id",
-				Description: "要查詢的使用者 Discord ID（選填）",
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "要查詢的使用者（選填）",
 				Required:    false,
 			},
 		},
@@ -108,7 +126,7 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 		pageIndex := pageCID.Value
 
 		var hasMore bool
-		userGames, tmpMore := utils.PaginationR(filteredUserGames, pageIndex, true)
+		userGames, tmpMore := commands.PaginationR(filteredUserGames, pageIndex, true)
 		if tmpMore {
 			hasMore = true
 		}
@@ -158,13 +176,8 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 		requesterID := utils.GetUserID(i)
 		targetDiscordID := requesterID
 
-		targetUserIDOption, err := utils.GetOptions(i, "discord_id")
-		if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
-			utils.HandleError(err, s, i)
-			return
-		}
-		if strings.TrimSpace(targetUserIDOption) != "" {
-			targetDiscordID = strings.TrimSpace(targetUserIDOption)
+		if selectedID, ok := selectedUserDiscordID(i); ok {
+			targetDiscordID = selectedID
 		}
 
 		// User資料
@@ -300,7 +313,7 @@ func getUserGameRecordTime(ug *kurohelperdb.UserGame) string {
 }
 
 func formatUserGameLine(index int, ug *kurohelperdb.UserGame) string {
-	flags := utils.FormatGameFlags(ug.Status, ug.WishListMark)
+	flags := commands.FormatGameFlags(ug.Status, ug.WishListMark)
 	line := fmt.Sprintf("%d. **%s**", index, ug.GameErogs.Name)
 	if flags != "" {
 		line += " **|** " + flags

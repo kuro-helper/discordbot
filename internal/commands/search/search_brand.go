@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"kurohelper/internal/cache"
+	"kurohelper/internal/commands"
 	kurohelperrerrors "kurohelper/internal/errors"
 	"kurohelper/internal/executor"
 	common "kurohelper/internal/executor"
@@ -115,7 +116,7 @@ func (sb *SearchBrand) HandleComponent(s *discordgo.Session, i *discordgo.Intera
 			erogsSearchGameWithSelectMenuCIDV2(s, i, cid, searchBrandCommandName, searchBrandErogsRouteKey)
 		case switchMode{searchBrandErogsRouteKey, utils.BackToHomeBehavior}:
 			common.BackToHome(s, i, cid.ToBackToHomeCIDV2(), cache.ErogsBrandStore, func(cacheValue *erogs.Brand, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-				statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+				statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 				if err != nil {
 					return nil, err
 				}
@@ -193,7 +194,7 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 				},
 				Accessory: &discordgo.Thumbnail{
 					Media: discordgo.UnfurledMediaItem{
-						URL: utils.PlaceholderImageURL,
+						URL: commands.PlaceholderImageURL,
 					},
 				},
 			})
@@ -336,7 +337,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	// character block
 
-	characterMap := make(map[string]utils.CharacterData) // map[characterID]CharacterData
+	characterMap := make(map[string]commands.CharacterData) // map[characterID]CharacterData
 	for _, va := range res.Results[0].Va {
 		characterName := va.Character.Original
 		if characterName == "" {
@@ -344,7 +345,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		}
 		for _, vn := range va.Character.Vns {
 			if vn.ID == res.Results[0].ID {
-				characterMap[va.Character.ID] = utils.CharacterData{
+				characterMap[va.Character.ID] = commands.CharacterData{
 					Name: characterName,
 					Role: vn.Role,
 				}
@@ -354,7 +355,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	}
 
 	// 將 map 轉為 slice 並排序
-	characterList := make([]utils.CharacterData, 0, len(characterMap))
+	characterList := make([]commands.CharacterData, 0, len(characterMap))
 	for _, character := range characterMap {
 		characterList = append(characterList, character)
 	}
@@ -457,7 +458,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
 	thumbnailURL := imageURL
 	if strings.TrimSpace(thumbnailURL) == "" {
-		thumbnailURL = utils.PlaceholderImageURL
+		thumbnailURL = commands.PlaceholderImageURL
 	}
 
 	section.Accessory = &discordgo.Thumbnail{
@@ -496,7 +497,7 @@ func erogsSearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return erogs.SearchBrandByKeyword([]string{keyword})
 	}, func(cacheValue *erogs.Brand, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-		statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+		statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 		if err != nil {
 			return nil, err
 		}
@@ -511,7 +512,7 @@ func erogsSearchBrandWithCIDV2(s *discordgo.Session, i *discordgo.InteractionCre
 		return
 	}
 	common.ChangePage(s, i, pageCID, cache.ErogsBrandStore, func(cacheValue *erogs.Brand, page int, cacheID string) ([]discordgo.MessageComponent, error) {
-		statusMap, inWishMap, err := utils.LoadGameStateMaps(utils.GetUserID(i))
+		statusMap, inWishMap, err := commands.LoadGameStateMaps(utils.GetUserID(i))
 		if err != nil {
 			return nil, err
 		}
@@ -567,7 +568,7 @@ func buildSearchBrandErogsComponents(res *erogs.Brand, currentPage int, cacheID 
 		itemNum := start + idx + 1
 		status := statusMap[item.ID]
 		_, inWish := inWishMap[item.ID]
-		statusSuffix := utils.FormatGameFlags(status, inWish)
+		statusSuffix := commands.FormatGameFlags(status, inWish)
 		if statusSuffix != "" {
 			statusSuffix = " " + statusSuffix
 		}
@@ -578,7 +579,7 @@ func buildSearchBrandErogsComponents(res *erogs.Brand, currentPage int, cacheID 
 			thumbnailURL = erogs.MakeDMMImageURL(item.DMM)
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
-			thumbnailURL = utils.PlaceholderImageURL
+			thumbnailURL = commands.PlaceholderImageURL
 		}
 
 		containerComponents = append(containerComponents, discordgo.Section{
