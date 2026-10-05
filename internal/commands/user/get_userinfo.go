@@ -26,6 +26,24 @@ type GetUserinfo struct{}
 
 const userInfoCommandName = "個人資料"
 
+func selectedUserDiscordID(i *discordgo.InteractionCreate) (string, bool) {
+	for _, opt := range i.ApplicationCommandData().Options {
+		if opt.Name != "user" {
+			continue
+		}
+		id, ok := opt.Value.(string)
+		if !ok {
+			return "", false
+		}
+		id = strings.TrimSpace(id)
+		if id == "" {
+			return "", false
+		}
+		return id, true
+	}
+	return "", false
+}
+
 func filterDisplayUserGames(userGames []kurohelperdb.UserGame) []kurohelperdb.UserGame {
 	filtered := make([]kurohelperdb.UserGame, 0, len(userGames))
 	for _, item := range userGames {
@@ -45,7 +63,7 @@ func (g *GetUserinfo) Definition() *discordgo.ApplicationCommand {
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "discord_id",
+				Name:        "user",
 				Description: "要查詢的使用者 Discord ID（選填）",
 				Required:    false,
 			},
@@ -158,13 +176,8 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 		requesterID := utils.GetUserID(i)
 		targetDiscordID := requesterID
 
-		targetUserIDOption, err := utils.GetOptions(i, "discord_id")
-		if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
-			utils.HandleError(err, s, i)
-			return
-		}
-		if strings.TrimSpace(targetUserIDOption) != "" {
-			targetDiscordID = strings.TrimSpace(targetUserIDOption)
+		if selectedID, ok := selectedUserDiscordID(i); ok {
+			targetDiscordID = selectedID
 		}
 
 		// User資料
