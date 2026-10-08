@@ -1,9 +1,11 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"strings"
 	"time"
 
 	"kurohelper/internal/utils"
@@ -11,6 +13,11 @@ import (
 	kurohelperdb "kurohelperservice/db"
 
 	"github.com/bwmarrin/discordgo"
+)
+
+const (
+	checkInTitleID     = 1
+	checkInTitleStreak = 100
 )
 
 type CheckIn struct{}
@@ -88,25 +95,47 @@ func (c *CheckIn) Handler(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		header = "# 今天已經簽到過囉！"
 	}
 
+	var earnedTitle *kurohelperdb.Title
+	if checkIn.State.CurrentStreak == checkInTitleStreak {
+		err := kurohelperdb.AddUserTitle(kurohelperdb.Dbs, user.ID, checkInTitleID)
+		if err != nil && !errors.Is(err, kurohelperdb.ErrUniqueViolation) {
+			utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
+			return
+		}
+		title, err := kurohelperdb.GetTitle(kurohelperdb.Dbs, checkInTitleID)
+		if err != nil {
+			utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
+			return
+		}
+		earnedTitle = &title
+	}
+
 	avatarURL := utils.GetAvatarURL(discordUser)
 	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{Content: header},
+		discordgo.Separator{Divider: &divider},
+		discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("## 今日運勢：**%s**\n%s\n\n已連續簽到 **%d** 天", selected.Name, selected.Description, checkIn.State.CurrentStreak),
+				},
+			},
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{URL: avatarURL},
+			},
+		},
+	}
+	if earnedTitle != nil {
+		containerComponents = append(containerComponents,
+			discordgo.Separator{Divider: &divider},
+			discordgo.TextDisplay{Content: formatCheckInTitle(*earnedTitle)},
+		)
+	}
 	components := []discordgo.MessageComponent{
 		discordgo.Container{
 			AccentColor: &selected.Color,
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{Content: header},
-				discordgo.Separator{Divider: &divider},
-				discordgo.Section{
-					Components: []discordgo.MessageComponent{
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("## 今日運勢：**%s**\n%s\n\n已連續簽到 **%d** 天", selected.Name, selected.Description, checkIn.State.CurrentStreak),
-						},
-					},
-					Accessory: &discordgo.Thumbnail{
-						Media: discordgo.UnfurledMediaItem{URL: avatarURL},
-					},
-				},
-			},
+			Components:  containerComponents,
 		},
 	}
 
@@ -118,6 +147,18 @@ func (c *CheckIn) Handler(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	)
 
 	utils.WebhookEditRespond(s, i, components)
+}
+
+func formatCheckInTitle(title kurohelperdb.Title) string {
+	name := strings.TrimSpace(title.Name)
+	if symbol := strings.TrimSpace(title.Symbol); symbol != "" {
+		name = fmt.Sprintf(":%s: %s", symbol, name)
+	}
+	text := "### 獲得稱號：" + name
+	if description := strings.TrimSpace(title.Description); description != "" {
+		text += "\n" + description
+	}
+	return text
 }
 
 func (*CheckIn) drawFortune(rng *rand.Rand) checkInFortune {
