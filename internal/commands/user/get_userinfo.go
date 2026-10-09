@@ -275,6 +275,12 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 		listUserGames = append(listUserGames, "**無資料**")
 	}
 
+	titles, err := kurohelperdb.GetTitlesByUserID(kurohelperdb.Dbs, user.ID)
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("**%s 的個人資料**", user.Name),
 		Color:       0xB481BB,
@@ -283,6 +289,11 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 			URL: avatar,
 		},
 		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "稱號",
+				Value:  formatUserTitles(titles),
+				Inline: false,
+			},
 			{
 				Name:   "玩過最多(公司品牌)",
 				Value:  strings.Join(listData, "\n"),
@@ -303,6 +314,26 @@ func (g *GetUserinfo) HandleComponent(s *discordgo.Session, i *discordgo.Interac
 	} else {
 		utils.EditEmbedRespond(s, i, embed, actionsRow)
 	}
+}
+
+func formatUserTitles(titles []kurohelperdb.Title) string {
+	if len(titles) == 0 {
+		return "**無稱號**"
+	}
+
+	lines := make([]string, 0, len(titles))
+	for _, title := range titles {
+		name := strings.TrimSpace(title.Name)
+		if symbol := strings.TrimSpace(title.Symbol); symbol != "" {
+			name = fmt.Sprintf(":%s: %s", symbol, name)
+		}
+		line := "**" + name + "**"
+		if description := strings.TrimSpace(title.Description); description != "" {
+			line += " — " + description
+		}
+		lines = append(lines, line)
+	}
+	return strings.Join(lines, "\n")
 }
 
 func getUserGameRecordTime(ug *kurohelperdb.UserGame) string {
